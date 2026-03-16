@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 사업부 월별 매출 대쉬보드</title>
+    <meta name="description" content="2026년 월별 목표, 실적, 달성률을 확인하고 관리할 수 있는 글로벌 매출 대쉬보드입니다.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <div>
+                <h1>2026 Sales Dashboard</h1>
+                <p>사업부서 월별 매출 현황 및 목표 달성률</p>
+            </div>
+            <div class="header-actions">
+                <input type="file" id="excel-upload" accept=".xlsx, .xls, .csv" style="display: none;">
+                <button id="upload-btn" class="btn secondary">엑셀 업로드</button>
+                <button id="add-item-btn" class="btn primary">항목 추가</button>
+            </div>
+        </header>
+
+        <main class="dashboard-content">
+            <!-- Charts Section -->
+            <section class="charts-section">
+                <div class="chart-card fade-in">
+                    <h2>월별 실적 및 달성율 (Monthly)</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="monthlyChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card fade-in" style="animation-delay: 0.1s;">
+                    <h2>누적 실적 및 달성율 (Cumulative)</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="cumulativeChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Data Table Section -->
+            <section class="data-section fade-in" style="animation-delay: 0.2s;">
+                <div class="data-header">
+                    <div class="header-left">
+                        <h2>데이터 입력 및 현황</h2>
+                    </div>
+                    <div class="header-right unit-toggle">
+                        <button class="unit-btn active" data-unit="1">원</button>
+                        <button class="unit-btn" data-unit="1000000">백만원</button>
+                        <button class="unit-btn" data-unit="100000000">억원</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="data-table">
+                        <thead>
+                            <tr id="table-header-row">
+                                <th class="fixed-col">항목</th>
+                                <th class="fixed-col-sub">구분</th>
+                                <!-- Months 1 to 12 will be injected via JS -->
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            <!-- Goals Row -->
+                            <tr id="row-goal" class="goal-row">
+                                <td class="fixed-col row-label">목표 (Goal)</td>
+                            </tr>
+                            <!-- Actuals Rows will be injected -->
+                        </tbody>
+                        <tfoot id="table-foot">
+                            <tr class="summary-row">
+                                <td class="fixed-col-span" colspan="2">총 목표 (Total Goal)</td>
+                            </tr>
+                            <tr class="summary-row">
+                                <td class="fixed-col-span" colspan="2">총 실적 (Total Actual)</td>
+                            </tr>
+                            <tr class="summary-row">
+                                <td class="fixed-col-span" colspan="2">달성율 (Achiev. Rate)</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal for adding new item -->
+    <div id="add-item-modal" class="modal">
+        <div class="modal-content">
+            <h3>새로운 실적 항목 추가</h3>
+            <input type="text" id="new-item-name" placeholder="예: 네이버, 11번가">
+            <div class="modal-actions">
+                <button id="cancel-add-btn" class="btn secondary">취소</button>
+                <button id="confirm-add-btn" class="btn primary">추가</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="index.js"></script>
+</body>
+</html>
