@@ -499,64 +499,72 @@ document.getElementById('excel-upload').addEventListener('change', (e) => {
 
     const reader = new FileReader();
     reader.onload = function(e) {
-        const fileData = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(fileData, {type: 'array'});
-        
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        
-        const json = XLSX.utils.sheet_to_json(worksheet, {header: 1});
-        
-        if (json.length > 1) {
-            let tempItems = [];
-            let tempGoals = {};
-            let tempActuals = {};
-
-            for (let r = 1; r < json.length; r++) {
-                const row = json[r];
-                if (!row || !row[0]) continue;
-                
-                const rowLabel = String(row[0]).trim();
-                
-                if (rowLabel.includes('총 실적') || rowLabel.includes('Total') || rowLabel.includes('달성율') || rowLabel.includes('%')) continue;
-
-                if (rowLabel.includes('목표')) {
-                    let itemName = rowLabel.replace('목표', '').trim();
-                    if (!tempItems.includes(itemName)) { tempItems.push(itemName); }
-                    if (!tempGoals[itemName]) { tempGoals[itemName] = Array(12).fill(0); }
-                    for (let i = 1; i <= 12; i++) {
-                        tempGoals[itemName][i-1] = Math.round(Number(row[i])) || 0;
-                    }
-                } else if (rowLabel.includes('실적')) {
-                    let itemName = rowLabel.replace('실적', '').trim();
-                    if (!tempItems.includes(itemName)) { tempItems.push(itemName); }
-                    if (!tempActuals[itemName]) { tempActuals[itemName] = Array(12).fill(0); }
-                    for (let i = 1; i <= 12; i++) {
-                        tempActuals[itemName][i-1] = Math.round(Number(row[i])) || 0;
-                    }
-                }
-            }
-
-            if (tempItems.length > 0) {
-                tempItems.forEach(item => {
-                    if (!tempGoals[item]) tempGoals[item] = Array(12).fill(0);
-                    if (!tempActuals[item]) tempActuals[item] = Array(12).fill(0);
-                });
-
-                items = [];
-                tempItems.forEach(item => items.push(item));
-                data.goals = tempGoals;
-                data.actuals = tempActuals;
-                saveToLocalStorage();
-                renderTable();
-            } else {
-                alert('업로드한 엑셀 파일 형식을 확인해주세요. (1열: 구분, 각 행마다 항목의 목표/실적)');
-            }
+        let isSuccess = processExcelArrayBuffer(e.target.result);
+        if (isSuccess) {
+            saveToLocalStorage();
+            renderTable();
+        } else {
+            alert('업로드한 엑셀 파일 형식을 확인해주세요. (1열: 구분, 각 행마다 항목의 목표/실적)');
         }
     };
     reader.readAsArrayBuffer(file);
     e.target.value = ''; // Reset input to allow re-upload
 });
+
+function processExcelArrayBuffer(arrayBuffer) {
+    const fileData = new Uint8Array(arrayBuffer);
+    const workbook = XLSX.read(fileData, {type: 'array'});
+    
+    const firstSheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[firstSheetName];
+    
+    const json = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+    
+    if (json.length > 1) {
+        let tempItems = [];
+        let tempGoals = {};
+        let tempActuals = {};
+
+        for (let r = 1; r < json.length; r++) {
+            const row = json[r];
+            if (!row || !row[0]) continue;
+            
+            const rowLabel = String(row[0]).trim();
+            
+            if (rowLabel.includes('총 실적') || rowLabel.includes('Total') || rowLabel.includes('달성율') || rowLabel.includes('%')) continue;
+
+            if (rowLabel.includes('목표')) {
+                let itemName = rowLabel.replace('목표', '').trim();
+                if (!tempItems.includes(itemName)) { tempItems.push(itemName); }
+                if (!tempGoals[itemName]) { tempGoals[itemName] = Array(12).fill(0); }
+                for (let i = 1; i <= 12; i++) {
+                    tempGoals[itemName][i-1] = Math.round(Number(row[i])) || 0;
+                }
+            } else if (rowLabel.includes('실적')) {
+                let itemName = rowLabel.replace('실적', '').trim();
+                if (!tempItems.includes(itemName)) { tempItems.push(itemName); }
+                if (!tempActuals[itemName]) { tempActuals[itemName] = Array(12).fill(0); }
+                for (let i = 1; i <= 12; i++) {
+                    tempActuals[itemName][i-1] = Math.round(Number(row[i])) || 0;
+                }
+            }
+        }
+
+        if (tempItems.length > 0) {
+            tempItems.forEach(item => {
+                if (!tempGoals[item]) tempGoals[item] = Array(12).fill(0);
+                if (!tempActuals[item]) tempActuals[item] = Array(12).fill(0);
+            });
+
+            items = [];
+            tempItems.forEach(item => items.push(item));
+            data.goals = tempGoals;
+            data.actuals = tempActuals;
+            return true;
+        }
+    }
+    return false;
+}
 
 // Add Unit Selector Logic
 document.querySelectorAll('.unit-btn').forEach(btn => {
@@ -568,9 +576,35 @@ document.querySelectorAll('.unit-btn').forEach(btn => {
     });
 });
 
+async function loadDataFromExcelFile() {
+    try {
+        const response = await fetch('./2026_dashboard.xlsx', { cache: 'no-store' });
+        if (!response.ok) {
+            console.log('2026_dashboard.xlsx 파일을 찾을 수 없습니다. 기존 저장된 데이터 또는 데모 데이터를 불러옵니다.');
+            loadFromLocalStorage();
+            return;
+        }
+        
+        const arrayBuffer = await response.arrayBuffer();
+        let isSuccess = processExcelArrayBuffer(arrayBuffer);
+        
+        if (isSuccess) {
+            console.log('2026_dashboard.xlsx 파일에서 데이터를 성공적으로 불러왔습니다.');
+            saveToLocalStorage();
+        } else {
+            console.warn('엑셀 파싱 실패. 기존 데이터를 불러옵니다.');
+            loadFromLocalStorage();
+        }
+    } catch (error) {
+        console.error('엑셀 파일 불러오기 중 에러 발생:', error);
+        loadFromLocalStorage();
+    }
+}
+
 // App Entry Point
 document.addEventListener('DOMContentLoaded', () => {
-    loadFromLocalStorage();
-    initCharts();
-    renderTable();
+    loadDataFromExcelFile().then(() => {
+        initCharts();
+        renderTable();
+    });
 });
