@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2026 사업부 월별 매출 대쉬보드</title>
+    <title>2026 온라인유통파트 월별 매출 대쉬보드</title>
     <meta name="description" content="2026년 월별 목표, 실적, 달성률을 확인하고 관리할 수 있는 글로벌 매출 대쉬보드입니다.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,12 +13,13 @@
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="index.css">
 </head>
+
 <body>
     <div class="dashboard-container">
         <header class="dashboard-header">
             <div>
                 <h1>2026 Sales Dashboard</h1>
-                <p>사업부서 월별 매출 현황 및 목표 달성률</p>
+                <p>온라인유통파트 월별 매출 현황 및 목표 달성률</p>
             </div>
             <div class="header-actions">
                 <input type="file" id="excel-upload" accept=".xlsx, .xls, .csv" style="display: none;">
@@ -27,6 +29,18 @@
         </header>
 
         <main class="dashboard-content">
+            <!-- Filter Section -->
+            <section class="filter-section fade-in">
+                <div class="filter-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="filter-all" checked>전체
+                    </label>
+                    <div id="filter-items-container" class="filter-items">
+                        <!-- Item checkboxes will be injected via JS -->
+                    </div>
+                </div>
+            </section>
+
             <!-- Charts Section -->
             <section class="charts-section">
                 <div class="chart-card fade-in">
@@ -48,11 +62,11 @@
                 <div class="data-header">
                     <div class="header-left">
                         <h2>데이터 입력 및 현황</h2>
-                    </div>
-                    <div class="header-right unit-toggle">
-                        <button class="unit-btn active" data-unit="1">원</button>
-                        <button class="unit-btn" data-unit="1000000">백만원</button>
-                        <button class="unit-btn" data-unit="100000000">억원</button>
+                        <div class="unit-toggle">
+                            <button class="unit-btn active" data-unit="1">원</button>
+                            <button class="unit-btn" data-unit="1000000">백만원</button>
+                            <button class="unit-btn" data-unit="100000000">억원</button>
+                        </div>
                     </div>
                 </div>
                 <div class="table-responsive">
@@ -102,4 +116,5 @@
 
     <script src="index.js"></script>
 </body>
+
 </html>

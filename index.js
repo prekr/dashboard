@@ -1,5 +1,6 @@
 // State Management
 let items = ['예스24', '알라딘', '쿠팡'];
+let activeItems = new Set(items);
 const months = Array.from({ length: 12 }, (_, i) => `${i + 1}월`);
 
 let data = {
@@ -28,6 +29,7 @@ function loadFromLocalStorage() {
     if (savedItems && savedData) {
         items = JSON.parse(savedItems);
         data = JSON.parse(savedData);
+        activeItems = new Set(items);
     } else {
         // Fallback to demo data
         data.goals['예스24'] = [500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500];
@@ -38,6 +40,7 @@ function loadFromLocalStorage() {
 
         data.goals['쿠팡'] = [1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000];
         data.actuals['쿠팡'] = [300, 400, 500, 600, 650, 800, 0, 0, 0, 0, 0, 0];
+        activeItems = new Set(items);
         saveToLocalStorage();
     }
 }
@@ -81,7 +84,7 @@ function getComputedData() {
     const itemAnnualGoals = {};
     const itemAnnualActuals = {};
 
-    items.forEach(item => {
+    activeItems.forEach(item => {
         itemAnnualGoals[item] = 0;
         itemAnnualActuals[item] = 0;
     });
@@ -93,7 +96,7 @@ function getComputedData() {
         // Calculate monthly total
         let actual = 0;
         let goal = 0;
-        items.forEach(item => {
+        activeItems.forEach(item => {
             let a = Math.round(Number(data.actuals[item]?.[i] || 0));
             let g = Math.round(Number(data.goals[item]?.[i] || 0));
             itemAnnualActuals[item] += a;
@@ -138,6 +141,13 @@ function getComputedData() {
 function renderTable() {
     const computed = getComputedData();
     
+    const tableContainer = document.querySelector('.table-responsive');
+    if (currentUnit === 1) {
+        tableContainer.classList.add('unit-won');
+    } else {
+        tableContainer.classList.remove('unit-won');
+    }
+
     // 1. Render Headers
     const headerRow = document.getElementById('table-header-row');
     headerRow.innerHTML = '<th class="fixed-col">항목</th><th class="fixed-col-sub">구분</th>';
@@ -151,7 +161,7 @@ function renderTable() {
     tbody.innerHTML = '';
 
     // Items Row (Goals and Actuals for each item)
-    items.forEach(item => {
+    activeItems.forEach(item => {
         let goalHtml = `<td class="fixed-col" rowspan="2">${item}</td>`;
         goalHtml += `<td class="fixed-col-sub">목표</td>`;
         for (let i = 0; i < 12; i++) {
@@ -270,7 +280,7 @@ function updateFooterAndChartsOnly() {
     const computed = getComputedData();
     
     // Update individual item row totals
-    items.forEach(item => {
+    activeItems.forEach(item => {
         const goalTd = document.querySelector(`td[data-total-goal="${item}"]`);
         const actualTd = document.querySelector(`td[data-total-actual="${item}"]`);
         if (goalTd) goalTd.innerText = formatDisplayValue(computed.itemAnnualGoals[item]);
@@ -373,11 +383,11 @@ function initCharts() {
 }
 
 const colors = [
-    '#6366f1', // Indigo
-    '#8b5cf6', // Violet
-    '#ec4899', // Pink
-    '#14b8a6', // Teal
-    '#f59e0b'  // Amber
+    '#3b82f6', // Blue
+    '#f59e0b', // Amber
+    '#ef4444', // Red
+    '#8b5cf6', // Purple
+    '#14b8a6'  // Teal
 ];
 
 function updateCharts(computed) {
@@ -398,12 +408,13 @@ function updateCharts(computed) {
         order: 2
     });
 
-    items.forEach((item, idx) => {
+    activeItems.forEach(item => {
+        const globalIdx = items.indexOf(item);
         monthlyDatasets.push({
             label: `${item} 실적`,
             data: data.actuals[item],
             type: 'bar',
-            backgroundColor: colors[idx % colors.length],
+            backgroundColor: colors[globalIdx % colors.length],
             yAxisID: 'y',
             stack: 'Stack 1',
             order: 2
@@ -477,9 +488,11 @@ document.getElementById('confirm-add-btn').addEventListener('click', () => {
     const name = input.value.trim();
     if (name && !items.includes(name)) {
         items.push(name);
+        activeItems.add(name);
         data.goals[name] = Array(12).fill(0);
         data.actuals[name] = Array(12).fill(0);
         saveToLocalStorage();
+        renderFilterCheckboxes();
         renderTable();
         document.getElementById('add-item-modal').classList.remove('active');
         input.value = '';
@@ -558,6 +571,7 @@ function processExcelArrayBuffer(arrayBuffer) {
 
             items = [];
             tempItems.forEach(item => items.push(item));
+            activeItems = new Set(items);
             data.goals = tempGoals;
             data.actuals = tempActuals;
             return true;
@@ -601,10 +615,67 @@ async function loadDataFromExcelFile() {
     }
 }
 
+// Filter View Logic
+function renderFilterCheckboxes() {
+    const container = document.getElementById('filter-items-container');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    items.forEach(item => {
+        const label = document.createElement('label');
+        label.className = 'checkbox-label';
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.value = item;
+        checkbox.checked = activeItems.has(item);
+        
+        checkbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                activeItems.add(item);
+            } else {
+                activeItems.delete(item);
+                const filterAll = document.getElementById('filter-all');
+                if (filterAll) filterAll.checked = false;
+            }
+            
+            if (activeItems.size === items.length) {
+                const filterAll = document.getElementById('filter-all');
+                if (filterAll) filterAll.checked = true;
+            }
+            
+            renderTable();
+        });
+        
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(' ' + item));
+        container.appendChild(label);
+    });
+    
+    const filterAll = document.getElementById('filter-all');
+    if (filterAll) filterAll.checked = activeItems.size === items.length;
+}
+
+const filterAllElem = document.getElementById('filter-all');
+if (filterAllElem) {
+    filterAllElem.addEventListener('change', (e) => {
+        const isChecked = e.target.checked;
+        const checkboxes = document.querySelectorAll('#filter-items-container input[type="checkbox"]');
+        checkboxes.forEach(cb => cb.checked = isChecked);
+        
+        if (isChecked) {
+            items.forEach(item => activeItems.add(item));
+        } else {
+            activeItems.clear();
+        }
+        renderTable();
+    });
+}
+
 // App Entry Point
 document.addEventListener('DOMContentLoaded', () => {
     loadDataFromExcelFile().then(() => {
         initCharts();
+        renderFilterCheckboxes();
         renderTable();
     });
 });
