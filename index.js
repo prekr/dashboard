@@ -141,10 +141,11 @@ function getComputedData() {
     // Annual growth rates per item
     activeItems.forEach(item => {
         const p = itemAnnualPrevActuals[item];
-        itemGrowthRates[item] = p > 0 ? ((itemAnnualActuals[item] - p) / p) * 100 : null;
+        const c = itemAnnualActuals[item];
+        itemGrowthRates[item] = (p > 0 && c > 0) ? ((c - p) / p) * 100 : null;
     });
     const totalAnnualPrevActual = runPrev;
-    const totalAnnualGrowthRate = totalAnnualPrevActual > 0 ? ((runTotal - totalAnnualPrevActual) / totalAnnualPrevActual) * 100 : null;
+    const totalAnnualGrowthRate = (totalAnnualPrevActual > 0 && runTotal > 0) ? ((runTotal - totalAnnualPrevActual) / totalAnnualPrevActual) * 100 : null;
 
     const totalAnnualGoal = runGoal;
     const totalAnnualActual = runTotal;
@@ -238,7 +239,7 @@ function renderTable() {
             for (let i = 0; i < 12; i++) {
                 const cur = data.actuals[item]?.[i] || 0;
                 const pre = data.prevActuals[item]?.[i] || 0;
-                const rate = pre > 0 ? ((cur - pre) / pre * 100) : null;
+                const rate = (pre > 0 && cur > 0) ? ((cur - pre) / pre * 100) : null;
                 const display = rate === null ? '-' : (rate >= 0 ? '+' : '') + rate.toFixed(1) + '%';
                 const color = rate === null ? 'var(--text-secondary)' : rate >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)';
                 growthHtml += `<td style="color:${color}; font-weight:600">${display}</td>`;
@@ -317,7 +318,7 @@ function renderTable() {
         for (let i = 0; i < 12; i++) {
             const cur = computed.monthlyTotal[i];
             const pre = computed.monthlyPrevTotal[i];
-            const rate = pre > 0 ? ((cur - pre) / pre * 100) : null;
+            const rate = (pre > 0 && cur > 0) ? ((cur - pre) / pre * 100) : null;
             const display = rate === null ? '-' : (rate >= 0 ? '+' : '') + rate.toFixed(1) + '%';
             const color = rate === null ? 'var(--text-secondary)' : rate >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)';
             totalGrowthHtml += `<td style="color:${color}; font-weight:600">${display}</td>`;
