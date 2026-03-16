@@ -166,7 +166,7 @@ function renderTable() {
         goalHtml += `<td class="fixed-col-sub">목표</td>`;
         for (let i = 0; i < 12; i++) {
             let val = data.goals[item]?.[i] || 0;
-            goalHtml += `<td><input type="text" class="data-input" data-type="goal" data-item="${item}" data-index="${i}" value="${formatDisplayValue(val)}" /></td>`;
+            goalHtml += `<td style="color:var(--text-secondary)">${formatDisplayValue(val)}</td>`;
         }
         goalHtml += `<td class="total-col" data-total-goal="${item}" style="color:var(--text-primary); font-weight:600">${formatDisplayValue(computed.itemAnnualGoals[item])}</td>`;
         const goalRow = document.createElement('tr');
@@ -177,13 +177,20 @@ function renderTable() {
         let itemHtml = `<td class="fixed-col-sub">실적</td>`;
         for (let i = 0; i < 12; i++) {
             let val = data.actuals[item]?.[i] || 0;
-            itemHtml += `<td><input type="text" class="data-input" data-type="actual" data-item="${item}" data-index="${i}" value="${formatDisplayValue(val)}" /></td>`;
+            itemHtml += `<td style="color:var(--accent-primary); font-weight:600">${formatDisplayValue(val)}</td>`;
         }
         itemHtml += `<td class="total-col" data-total-actual="${item}" style="color:var(--accent-primary); font-weight:600">${formatDisplayValue(computed.itemAnnualActuals[item])}</td>`;
         const itemRow = document.createElement('tr');
+        itemRow.className = 'actual-row';
         itemRow.innerHTML = itemHtml;
         tbody.appendChild(itemRow);
     });
+
+    // Mark last item's fixed-col and actual-row for thick bottom border
+    const allFixedCols = tbody.querySelectorAll('td.fixed-col');
+    const allActualRows = tbody.querySelectorAll('tr.actual-row');
+    if (allFixedCols.length > 0) allFixedCols[allFixedCols.length - 1].classList.add('last-group');
+    if (allActualRows.length > 0) allActualRows[allActualRows.length - 1].classList.add('last-group-row');
 
     // 3. Render Footer (Totals)
     const tfoot = document.getElementById('table-foot');
@@ -207,7 +214,7 @@ function renderTable() {
     }
     totalHtml += `<td style="color:var(--accent-primary); font-weight:600">${formatDisplayValue(computed.totalAnnualActual)}</td>`;
     const totalRow = document.createElement('tr');
-    totalRow.className = 'summary-row';
+    totalRow.className = 'summary-row summary-actual';
     totalRow.innerHTML = totalHtml;
     tfoot.appendChild(totalRow);
 
@@ -223,58 +230,9 @@ function renderTable() {
     rateRow.innerHTML = rateHtml;
     tfoot.appendChild(rateRow);
 
-    attachInputListeners();
     updateCharts(computed);
 }
 
-// Event Listeners for data binding
-function attachInputListeners() {
-    const inputs = document.querySelectorAll('.data-input');
-    inputs.forEach(input => {
-        input.addEventListener('input', (e) => {
-            let caretPos = e.target.selectionStart;
-            let originalLen = e.target.value.length;
-            
-            let rawStr = e.target.value.replace(/[^0-9.-]/g, '');
-            let val = parseInputString(rawStr);
-            
-            let formatted;
-            if (currentUnit === 1) {
-                let intVal = Number(rawStr.replace(/-/g, '')) || 0;
-                let sign = rawStr.startsWith('-') ? '-' : '';
-                formatted = rawStr === '' ? '' : rawStr === '-' ? '-' : sign + intVal.toLocaleString();
-            } else {
-                formatted = rawStr; // Let user type decimals freely
-            }
-            e.target.value = formatted;
-            
-            let newLen = formatted.length;
-            caretPos = caretPos - (originalLen - newLen);
-            e.target.setSelectionRange(caretPos, caretPos);
-
-            const index = e.target.getAttribute('data-index');
-            const type = e.target.getAttribute('data-type');
-            
-            if (type === 'goal') {
-                const item = e.target.getAttribute('data-item');
-                data.goals[item][index] = val;
-            } else if (type === 'actual') {
-                const item = e.target.getAttribute('data-item');
-                data.actuals[item][index] = val;
-            }
-            
-            saveToLocalStorage();
-            updateFooterAndChartsOnly();
-        });
-        
-        input.addEventListener('blur', (e) => {
-            let rawStr = e.target.value.replace(/[^0-9.-]/g, '');
-            if (rawStr === '' || rawStr === '-') { rawStr = '0'; }
-            let val = parseInputString(rawStr);
-            e.target.value = formatDisplayValue(val);
-        });
-    });
-}
 
 function updateFooterAndChartsOnly() {
     const computed = getComputedData();
@@ -380,6 +338,20 @@ function initCharts() {
         data: { labels: months, datasets: [] },
         options: getChartOptions()
     });
+
+    // Force chart resize when the section container changes size
+    const chartsSection = document.querySelector('.charts-section');
+    if (chartsSection && typeof ResizeObserver !== 'undefined') {
+        let resizeTimer;
+        const ro = new ResizeObserver(() => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                if (monthlyChart) monthlyChart.resize();
+                if (cumulativeChart) cumulativeChart.resize();
+            }, 50);
+        });
+        ro.observe(chartsSection);
+    }
 }
 
 const colors = [

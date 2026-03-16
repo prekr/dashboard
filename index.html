@@ -21,81 +21,81 @@
                 <h1>2026 Sales Dashboard</h1>
                 <p>온라인유통파트 월별 매출 현황 및 목표 달성률</p>
             </div>
+    </div>
+    </header>
+
+    <main class="dashboard-content">
+        <!-- Filter Section -->
+        <section class="filter-section fade-in">
+            <div class="filter-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="filter-all" checked>전체
+                </label>
+                <div id="filter-items-container" class="filter-items">
+                    <!-- Item checkboxes will be injected via JS -->
+                </div>
             </div>
-        </header>
+        </section>
 
-        <main class="dashboard-content">
-            <!-- Filter Section -->
-            <section class="filter-section fade-in">
-                <div class="filter-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="filter-all" checked>전체
-                    </label>
-                    <div id="filter-items-container" class="filter-items">
-                        <!-- Item checkboxes will be injected via JS -->
-                    </div>
+        <!-- Charts Section -->
+        <section class="charts-section">
+            <div class="chart-card fade-in">
+                <h2>월별 실적 및 달성율 (Monthly)</h2>
+                <div class="chart-wrapper">
+                    <canvas id="monthlyChart"></canvas>
                 </div>
-            </section>
+            </div>
+            <div class="chart-card fade-in" style="animation-delay: 0.1s;">
+                <h2>누적 실적 및 달성율 (Cumulative)</h2>
+                <div class="chart-wrapper">
+                    <canvas id="cumulativeChart"></canvas>
+                </div>
+            </div>
+        </section>
 
-            <!-- Charts Section -->
-            <section class="charts-section">
-                <div class="chart-card fade-in">
-                    <h2>월별 실적 및 달성율 (Monthly)</h2>
-                    <div class="chart-wrapper">
-                        <canvas id="monthlyChart"></canvas>
+        <!-- Data Table Section -->
+        <section class="data-section fade-in" style="animation-delay: 0.2s;">
+            <div class="data-header">
+                <div class="header-left">
+                    <h2>채널별 매출 현황</h2>
+                    <div class="unit-toggle">
+                        <button class="unit-btn active" data-unit="1">원</button>
+                        <button class="unit-btn" data-unit="1000000">백만원</button>
+                        <button class="unit-btn" data-unit="100000000">억원</button>
                     </div>
                 </div>
-                <div class="chart-card fade-in" style="animation-delay: 0.1s;">
-                    <h2>누적 실적 및 달성율 (Cumulative)</h2>
-                    <div class="chart-wrapper">
-                        <canvas id="cumulativeChart"></canvas>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Data Table Section -->
-            <section class="data-section fade-in" style="animation-delay: 0.2s;">
-                <div class="data-header">
-                    <div class="header-left">
-                        <h2>데이터 입력 및 현황</h2>
-                        <div class="unit-toggle">
-                            <button class="unit-btn active" data-unit="1">원</button>
-                            <button class="unit-btn" data-unit="1000000">백만원</button>
-                            <button class="unit-btn" data-unit="100000000">억원</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="table-responsive">
-                    <table id="data-table">
-                        <thead>
-                            <tr id="table-header-row">
-                                <th class="fixed-col">항목</th>
-                                <th class="fixed-col-sub">구분</th>
-                                <!-- Months 1 to 12 will be injected via JS -->
-                            </tr>
-                        </thead>
-                        <tbody id="table-body">
-                            <!-- Goals Row -->
-                            <tr id="row-goal" class="goal-row">
-                                <td class="fixed-col row-label">목표 (Goal)</td>
-                            </tr>
-                            <!-- Actuals Rows will be injected -->
-                        </tbody>
-                        <tfoot id="table-foot">
-                            <tr class="summary-row">
-                                <td class="fixed-col-span" colspan="2">총 목표 (Total Goal)</td>
-                            </tr>
-                            <tr class="summary-row">
-                                <td class="fixed-col-span" colspan="2">총 실적 (Total Actual)</td>
-                            </tr>
-                            <tr class="summary-row">
-                                <td class="fixed-col-span" colspan="2">달성율 (Achiev. Rate)</td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </section>
-        </main>
+            </div>
+            <div class="table-responsive">
+                <table id="data-table">
+                    <thead>
+                        <tr id="table-header-row">
+                            <th class="fixed-col">항목</th>
+                            <th class="fixed-col-sub">구분</th>
+                            <!-- Months 1 to 12 will be injected via JS -->
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <!-- Goals Row -->
+                        <tr id="row-goal" class="goal-row">
+                            <td class="fixed-col row-label">목표 (Goal)</td>
+                        </tr>
+                        <!-- Actuals Rows will be injected -->
+                    </tbody>
+                    <tfoot id="table-foot">
+                        <tr class="summary-row">
+                            <td class="fixed-col-span" colspan="2">총 목표 (Total Goal)</td>
+                        </tr>
+                        <tr class="summary-row">
+                            <td class="fixed-col-span" colspan="2">총 실적 (Total Actual)</td>
+                        </tr>
+                        <tr class="summary-row">
+                            <td class="fixed-col-span" colspan="2">달성율 (Achiev. Rate)</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </section>
+    </main>
     </div>
 
 
