@@ -254,11 +254,13 @@ function renderTable() {
         }
     });
 
-    // Mark last item's fixed-col and actual-row for thick bottom border
+    // Mark last item's fixed-col and the very last row of the body for thick bottom border
     const allFixedCols = tbody.querySelectorAll('td.fixed-col');
-    const allActualRows = tbody.querySelectorAll('tr.actual-row');
     if (allFixedCols.length > 0) allFixedCols[allFixedCols.length - 1].classList.add('last-group');
-    if (allActualRows.length > 0) allActualRows[allActualRows.length - 1].classList.add('last-group-row');
+    
+    if (tbody.lastElementChild) {
+        tbody.lastElementChild.classList.add('last-group-row');
+    }
 
     // 3. Render Footer (Totals)
     const tfoot = document.getElementById('table-foot');
@@ -297,6 +299,38 @@ function renderTable() {
     rateRow.className = 'summary-row';
     rateRow.innerHTML = rateHtml;
     tfoot.appendChild(rateRow);
+
+    if (showYoy) {
+        // Total Prev Actual Row
+        let totalPrevHtml = `<td class="fixed-col-span" colspan="2" style="color:#fb923c">전년 총 실적 (Total Prev. Actual)</td>`;
+        for (let i = 0; i < 12; i++) {
+            totalPrevHtml += `<td style="color:#fb923c">${formatDisplayValue(computed.monthlyPrevTotal[i])}</td>`;
+        }
+        totalPrevHtml += `<td style="color:#fb923c; font-weight:600">${formatDisplayValue(computed.totalAnnualPrevActual)}</td>`;
+        const totalPrevRow = document.createElement('tr');
+        totalPrevRow.className = 'summary-row prev-row';
+        totalPrevRow.innerHTML = totalPrevHtml;
+        tfoot.appendChild(totalPrevRow);
+
+        // Total Growth Row
+        let totalGrowthHtml = `<td class="fixed-col-span" colspan="2" style="color:var(--text-secondary)">전년비 증감 (%)</td>`;
+        for (let i = 0; i < 12; i++) {
+            const cur = computed.monthlyTotal[i];
+            const pre = computed.monthlyPrevTotal[i];
+            const rate = pre > 0 ? ((cur - pre) / pre * 100) : null;
+            const display = rate === null ? '-' : (rate >= 0 ? '+' : '') + rate.toFixed(1) + '%';
+            const color = rate === null ? 'var(--text-secondary)' : rate >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)';
+            totalGrowthHtml += `<td style="color:${color}; font-weight:600">${display}</td>`;
+        }
+        const gr = computed.totalAnnualGrowthRate;
+        const grDisplay = gr === null ? '-' : (gr >= 0 ? '+' : '') + gr.toFixed(1) + '%';
+        const grColor = gr === null ? 'var(--text-secondary)' : gr >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)';
+        totalGrowthHtml += `<td style="color:${grColor}; font-weight:600">${grDisplay}</td>`;
+        const totalGrowthRow = document.createElement('tr');
+        totalGrowthRow.className = 'summary-row growth-row';
+        totalGrowthRow.innerHTML = totalGrowthHtml;
+        tfoot.appendChild(totalGrowthRow);
+    }
 
     updateCharts(computed);
 }
